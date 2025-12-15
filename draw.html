@@ -9,10 +9,56 @@
       font-family: Arial, sans-serif;
       text-align: center;
       margin-top: 50px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+    }
+    .input-section {
+      margin-bottom: 30px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #555;
+    }
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-family: Arial, sans-serif;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .help-text {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+      font-style: italic;
     }
     button {
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 12px 30px;
+      font-size: 18px;
       background-color: #ff5c8e;
       color: white;
       border: none;
@@ -20,118 +66,366 @@
       cursor: pointer;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
       transition: background-color 0.3s;
+      margin: 10px;
     }
     button:hover {
       background-color: #f8c0c8;
     }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
     .results {
       margin-top: 30px;
       font-size: 18px;
+      text-align: left;
     }
     .results ul {
       list-style-type: none;
       padding: 0;
     }
+    .results li {
+      padding: 15px;
+      margin: 10px 0;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      border-left: 4px solid #ff5c8e;
+    }
     .url-link {
       display: block;
       margin-top: 10px;
       font-size: 14px;
-      color: #00f;
+      color: #0066cc;
       word-wrap: break-word;
       white-space: pre-wrap;
+      padding: 8px;
+      background-color: #e8f4f8;
+      border-radius: 4px;
     }
     .assignments-list {
       margin-top: 40px;
       font-size: 16px;
       font-weight: bold;
       color: #333;
-      white-space: pre-wrap; /* Ensures the format of object is kept */
+      white-space: pre-wrap;
+      text-align: left;
+      background-color: #f9f9f9;
+      padding: 20px;
+      border-radius: 8px;
+      border: 2px solid #ddd;
+    }
+    .assignments-list pre {
+      margin: 0;
+      font-family: 'Courier New', monospace;
+    }
+    .error {
+      color: #d32f2f;
+      background-color: #ffebee;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid #d32f2f;
+    }
+    .success {
+      color: #2e7d32;
+      background-color: #e8f5e9;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid #2e7d32;
+    }
+    .name-tag {
+      display: inline-block;
+      background-color: #667eea;
+      color: white;
+      padding: 5px 12px;
+      border-radius: 15px;
+      margin: 5px;
+      font-size: 14px;
+    }
+    .preview-section {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f0f0f0;
+      border-radius: 8px;
+      text-align: left;
     }
   </style>
 </head>
 <body>
 
-  <h1>Generate Secret Santa Draw</h1>
+  <div class="container">
+    <h1>🎅 Generate Secret Santa Draw</h1>
 
-  <button onclick="generateDraw()">Generate Secret Santa Draw</button>
+    <div class="input-section">
+      <label for="namesInput">Enter participant names (one per line or separated by commas):</label>
+      <textarea id="namesInput" placeholder="Enter participant names here...&#10;One name per line or separated by commas"></textarea>
+      <div class="help-text">💡 Tip: Enter each name on a new line, or separate them with commas</div>
+    </div>
 
-  <div class="results" id="results"></div>
+    <div id="previewSection" class="preview-section" style="display: none;">
+      <strong>Participants Preview:</strong>
+      <div id="namesPreview"></div>
+    </div>
 
-  <!-- New section to show the assignments as an object -->
-  <div class="assignments-list" id="assignmentsList"></div>
+    <button id="previewBtn" onclick="previewNames()">Preview Names</button>
+    <button id="generateBtn" onclick="generateDraw()">Generate Secret Santa Draw</button>
+
+    <div id="errorMessage"></div>
+    <div id="results"></div>
+    <div class="assignments-list" id="assignmentsList"></div>
+  </div>
 
   <script>
-    // List of participants (names as plain text)
-    const participants = [
-      "Nicola", "Daad", "Zeina", "Anjie", "Samir", 
-      "Liliane", "Elias", "MarieJeanne", "Issam"
-    ];
+    // Function to parse names from input
+    function parseNames(input) {
+      if (!input || input.trim() === '') {
+        return [];
+      }
+      
+      // Split by newlines first, then by commas, then filter and trim
+      let names = input
+        .split(/\n|,/)
+        .map(name => name.trim())
+        .filter(name => name.length > 0);
+      
+      // Remove duplicates
+      return [...new Set(names)];
+    }
 
-    // Base64 encode map for each participant
-    const encodedNames = {
-      "Nicola": "RGFuaWE=",
-      "Daad": "RmFkaQ==",
-      "Zeina": "SXNzYW0=",
-      "Anjie": "RWxpYXM=",
-      "Samir": "SmVseXNzYQ==",
-      "Liliane": "U2Fya2lz",
-      "Elias": "RGlhbm5l",
-      "MarieJeanne": "Tml2aW5l",
-      "Issam": "U2hhZGk="
-    };
+    // Function to Base64 encode a name
+    function encodeName(name) {
+      // Simple Base64 encoding that works reliably
+      try {
+        return btoa(unescape(encodeURIComponent(name)));
+      } catch (e) {
+        // Fallback for simple ASCII names
+        return btoa(name);
+      }
+    }
+
+    // Function to preview names
+    function previewNames() {
+      const input = document.getElementById('namesInput').value;
+      const names = parseNames(input);
+      const previewSection = document.getElementById('previewSection');
+      const namesPreview = document.getElementById('namesPreview');
+      const errorMessage = document.getElementById('errorMessage');
+
+      errorMessage.innerHTML = '';
+
+      if (names.length === 0) {
+        errorMessage.innerHTML = '<div class="error">⚠️ Please enter at least one name!</div>';
+        previewSection.style.display = 'none';
+        return;
+      }
+
+      if (names.length < 2) {
+        errorMessage.innerHTML = '<div class="error">⚠️ You need at least 2 participants for Secret Santa!</div>';
+        previewSection.style.display = 'none';
+        return;
+      }
+
+      // Display preview
+      namesPreview.innerHTML = names.map(name => 
+        `<span class="name-tag">${name}</span>`
+      ).join('');
+      
+      previewSection.style.display = 'block';
+      errorMessage.innerHTML = `<div class="success">✅ Found ${names.length} participants. Ready to generate!</div>`;
+    }
 
     // Generate the Secret Santa assignments
     function generateDraw() {
-      const shuffledParticipants = [...participants];
-      let assignments = {};
+      const input = document.getElementById('namesInput').value;
+      const participants = parseNames(input);
+      const errorMessage = document.getElementById('errorMessage');
+      const resultsDiv = document.getElementById('results');
+      const assignmentsListDiv = document.getElementById('assignmentsList');
 
-      // Shuffle participants to generate a random assignment
-      for (let i = shuffledParticipants.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledParticipants[i], shuffledParticipants[j]] = [shuffledParticipants[j], shuffledParticipants[i]];
+      // Clear previous results
+      errorMessage.innerHTML = '';
+      resultsDiv.innerHTML = '';
+      assignmentsListDiv.innerHTML = '';
+
+      // Validation
+      if (participants.length === 0) {
+        errorMessage.innerHTML = '<div class="error">⚠️ Please enter at least one name!</div>';
+        return;
       }
 
-      // Ensure no one is assigned to themselves
+      if (participants.length < 2) {
+        errorMessage.innerHTML = '<div class="error">⚠️ You need at least 2 participants for Secret Santa!</div>';
+        return;
+      }
+
+      // Simple and reliable Secret Santa assignment algorithm
+      // Create a shuffled list of receivers
+      let receivers = [...participants];
+      
+      // Fisher-Yates shuffle
+      for (let i = receivers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [receivers[i], receivers[j]] = [receivers[j], receivers[i]];
+      }
+
+      // Create assignments: each person gives to the next in shuffled list
+      // If someone would get themselves, swap with the next assignment
+      let assignments = {};
+      
       for (let i = 0; i < participants.length; i++) {
         const giver = participants[i];
-        const receiver = shuffledParticipants[i === participants.length - 1 ? 0 : i + 1];
+        let receiver = receivers[i];
+        
+        // If self-assignment, use next person (wrapping around)
+        if (receiver === giver) {
+          receiver = receivers[(i + 1) % receivers.length];
+        }
+        
         assignments[giver] = receiver;
       }
 
-      // Show the results with links to the index page with Base64-encoded names
-      const resultsDiv = document.getElementById("results");
-      let resultHTML = "<ul>";
+      // Final check: fix any remaining self-assignments by swapping
+      for (let i = 0; i < participants.length; i++) {
+        const giver = participants[i];
+        if (assignments[giver] === giver) {
+          // Swap with next person's assignment
+          const nextIndex = (i + 1) % participants.length;
+          const nextGiver = participants[nextIndex];
+          const temp = assignments[nextGiver];
+          assignments[nextGiver] = assignments[giver];
+          assignments[giver] = temp;
+        }
+      }
+
+      // Get current page URL to construct links
+      let baseUrl;
+      
+      // Check if running from file:// protocol
+      if (window.location.protocol === 'file:') {
+        // For local files, use relative path - this works better with file://
+        baseUrl = 'index.html';
+      } else {
+        // For http/https, use normal URL construction
+        baseUrl = window.location.origin + window.location.pathname.replace('draw.html', 'index.html');
+      }
+
+      // Show the results with links
+      let resultHTML = "<h2>🎁 Secret Santa Assignments</h2><ul>";
 
       for (let giver in assignments) {
         const receiver = assignments[giver];
-        // Construct the URL with Base64 encoding for the giver
-        const url = `https://issam15ie.github.io/secret-santa-sa/?name=${encodedNames[giver]}`;
-        resultHTML += `<li>${giver} is buying a gift for ${receiver} 
-        <a href="${url}" target="_blank">Reveal Secret Santa</a>
-        <span class="url-link">${url}</span></li>`;
+        const encodedName = encodeName(giver);
+        // URL encode the Base64 string to handle special characters
+        const urlEncodedName = encodeURIComponent(encodedName);
+        let url = `${baseUrl}?name=${urlEncodedName}`;
+        
+        // For file:// protocol, also show the full path
+        let displayUrl = url;
+        if (window.location.protocol === 'file:') {
+          const currentPath = window.location.href;
+          const directory = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+          displayUrl = directory + url;
+        }
+        
+        resultHTML += `
+          <li>
+            <strong>${giver}</strong> is buying a gift for
+            <br>
+            <a href="${url}" target="_blank" style="color: #ff5c8e; text-decoration: none; font-weight: bold;">🔗 Reveal Secret Santa</a>
+            <span class="url-link">${displayUrl}</span>
+          </li>`;
       }
 
       resultHTML += "</ul>";
       resultsDiv.innerHTML = resultHTML;
 
-      // Show the assignments in object format (as a JS object on the page)
-      const assignmentsListDiv = document.getElementById("assignmentsList");
-
-      // Convert the assignments object to a formatted string for display
+      // Show the assignments in object format
       let assignmentsObjectString = "const secretSantaAssignments = {\n";
-      for (let giver in assignments) {
+      const assignmentKeys = Object.keys(assignments);
+      assignmentKeys.forEach((giver, index) => {
         const receiver = assignments[giver];
-        assignmentsObjectString += `  "${giver}": "${receiver}",\n`;
+        const comma = index < assignmentKeys.length - 1 ? ',' : '';
+        assignmentsObjectString += `  "${giver}": "${receiver}"${comma}\n`;
+      });
+      assignmentsObjectString += "};";
+
+      // Save assignments to localStorage so index.html can read them automatically
+      try {
+        localStorage.setItem('secretSantaAssignments', JSON.stringify(assignments));
+        console.log('Assignments saved to localStorage');
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
       }
 
-      // Remove the trailing comma on the last entry
-      assignmentsObjectString = assignmentsObjectString.slice(0, -2); 
-      assignmentsObjectString += "\n};";
+      assignmentsListDiv.innerHTML = `
+        <h3>📋 Assignments saved automatically! (Also available to copy if needed):</h3>
+        <button onclick="copyAssignmentsCode()" style="margin: 10px 0; padding: 10px 20px; background-color: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">📋 Copy Code to Clipboard</button>
+        <pre id="assignmentsCode" style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">${assignmentsObjectString}</pre>
+        <div id="copySuccess" style="display: none; color: #2e7d32; margin-top: 10px; font-weight: bold;">✅ Code copied!</div>
+      `;
 
-      // Display the object as a string on the page
-      assignmentsListDiv.innerHTML = `<pre>${assignmentsObjectString}</pre>`;
+      errorMessage.innerHTML = '<div class="success">✅ Secret Santa draw generated successfully!<br><strong>✅ Assignments saved automatically!</strong> The links below will work now. You can also copy the code above if you want to manually update index.html.</div>';
     }
+
+    // Allow Enter key to trigger preview (but Shift+Enter for new line)
+    document.getElementById('namesInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.shiftKey === false && e.ctrlKey === false) {
+        e.preventDefault();
+        previewNames();
+      }
+    });
+
+    // Function to copy assignments code to clipboard
+    function copyAssignmentsCode() {
+      const codeElement = document.getElementById('assignmentsCode');
+      if (codeElement) {
+        const text = codeElement.textContent;
+        navigator.clipboard.writeText(text).then(function() {
+          const successDiv = document.getElementById('copySuccess');
+          if (successDiv) {
+            successDiv.style.display = 'block';
+            setTimeout(function() {
+              successDiv.style.display = 'none';
+            }, 3000);
+          }
+        }).catch(function(err) {
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = text;
+          textArea.style.position = 'fixed';
+          textArea.style.opacity = '0';
+          document.body.appendChild(textArea);
+          textArea.select();
+          try {
+            document.execCommand('copy');
+            const successDiv = document.getElementById('copySuccess');
+            if (successDiv) {
+              successDiv.style.display = 'block';
+              setTimeout(function() {
+                successDiv.style.display = 'none';
+              }, 3000);
+            }
+          } catch (err) {
+            alert('Failed to copy. Please manually select and copy the code.');
+          }
+          document.body.removeChild(textArea);
+        });
+      }
+    }
+
+    // Ensure generate button works - add event listener as backup
+    window.addEventListener('DOMContentLoaded', function() {
+      const generateBtn = document.getElementById('generateBtn');
+      if (generateBtn) {
+        generateBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          generateDraw();
+        });
+      }
+    });
   </script>
 
 </body>
 </html>
+
