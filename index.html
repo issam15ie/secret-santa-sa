@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secret Santa Assignment</title>
+  <style>
+    /* Global styles for full-page layout */
+    html, body {
+      height: 100%;  /* Full height of the viewport */
+      margin: 0;     /* Remove default margin */
+      padding: 0;    /* Remove default padding */
+      overflow: hidden; /* Prevent scrolling */
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      background-color: #0a4d2e; /* Fallback dark green color */
+      background-image: url('background.png');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-attachment: fixed;
+      background-size: cover;
+      color: white;
+      min-height: 100vh;  /* Ensure content fills the screen */
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 3em;
+      color: #ff5c8e;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+      margin-bottom: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 90%; /* Ensure the container fits well on mobile */
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      z-index: 2;
+      margin: 10px;
+    }
+
+    p {
+      font-size: 20px;
+      margin: 15px 0;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 20px;
+      background-color: #ff5c8e;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #f8c0c8;
+    }
+
+    .info {
+      font-size: 1.2em;
+      margin-top: 30px;
+      color: #f0e6a5;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .tree {
+      font-size: 2em;
+      color: #ff8c00;
+      margin-top: 30px;
+    }
+
+    .tree i {
+      color: #f8c0c8;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+    }
+
+    .gift-box {
+      font-size: 1.5em;
+      margin-top: 20px;
+      color: #ffdf6b;
+    }
+.gift-box-1 {
+  font-size: 1.5em;
+  margin-top: 20px;
+  width: 200px;  /* Default width */
+  height: 200px;  /* Default height to make it square */
+  background-image: url('box.jpg'); /* Replace with actual image URL */
+  background-size: cover;  /* Ensures the image covers the entire box */
+  background-position: center;  /* Centers the image */
+  color: white;
+  cursor: pointer;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;  /* This stacks the text above the image */
+  font-weight: bold;
+  position: fixed;
+  bottom: 20px;  /* Space from the bottom */
+  left: 7%;
+  transform: translateX(-50%); /* Center horizontally */
+  padding: 10px;
+  z-index: 10;
+}
+
+.gift-box-1 .text {
+  z-index: 2;  /* Ensure text is above image */
+}
+
+.gift-box-1:hover {
+  opacity: 0.9;  /* Slight fade effect on hover */
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .gift-box-1 {
+    width: 25px;  /* Reduce size for mobile screens */
+    height: 25px;  /* Keep it square */
+    font-size: 1.2em;  /* Adjust font size */
+  }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+  .gift-box-1 {
+    width: 25px;  /* Further reduce size */
+    height: 25px;  /* Keep square */
+    font-size: 1em;  /* Adjust font size */
+  }
+}
+
+
+
+	
+   .santa-appear {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      background-image: url('christmas-ho-ho-ho.gif');
+      background-size: cover;
+      display: none;
+      animation: slapAnimation 2s ease-in-out forwards;
+    }
+	
+	
+    /* Snowfall animation */
+    .snowfall {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      animation: snowfall 10s linear infinite;
+    }
+
+    @keyframes snowfall {
+      0% {
+        top: -10%;
+      }
+      100% {
+        top: 100%;
+      }
+    }
+
+    /* Snowflakes animation */
+    .snowflake {
+      position: absolute;
+      top: -50px;
+      font-size: 30px;
+      animation: snowflakes 10s linear infinite;
+      opacity: 0.8;
+    }
+
+    @keyframes snowflakes {
+      0% {
+        left: 0%;
+        top: -50px;
+      }
+      50% {
+        left: 50%;
+        top: 50%;
+      }
+      100% {
+        left: 100%;
+        top: 100%;
+      }
+    }
+
+    /* Revealed name style */
+    #assignedPerson {
+      font-size: 2.5em;             /* Make the font size bigger */
+      font-weight: bold;            /* Make the text bold */
+      color: #ff5c8e;               /* Use a Christmas-like color */
+      text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3); /* Add shadow */
+      margin-top: 20px;             /* Add some space above */
+      transition: all 0.3s ease;    /* Smooth transition */
+    }
+
+    /* Media queries for mobile responsiveness */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2.5em;
+      }
+
+      button {
+        padding: 12px 25px;
+        font-size: 18px;
+      }
+
+      .container {
+        padding: 15px;
+        max-width: 90%;
+      }
+
+      p {
+        font-size: 18px;
+      }
+
+      .info {
+        font-size: 1.1em;
+        margin-top: 25px;
+      }
+
+      .tree, .gift-box {
+        font-size: 1.3em;
+      }
+    }
+
+    /* For very small mobile screens */
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 2em;
+      }
+
+      .container {
+        padding: 10px;
+      }
+
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+      }
+
+      p {
+        font-size: 16px;
+      }
+
+      .info {
+        font-size: 1em;
+      }
+
+      .tree, .gift-box {
+        font-size: 1.2em;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="snowfall">
+  <!-- Snowflakes -->
+  
+  <div class="snowflake" style="left: 10%; animation-duration: 12s;">❄</div>
+  <div class="snowflake" style="left: 20%; animation-duration: 8s;">❄</div>
+  <div class="snowflake" style="left: 30%; animation-duration: 10s;">❄</div>
+  <div class="snowflake" style="left: 40%; animation-duration: 7s;">❄</div>
+  <div class="snowflake" style="left: 50%; animation-duration: 9s;">❄</div>
+  <div class="snowflake" style="left: 60%; animation-duration: 6s;">❄</div>
+  <div class="snowflake" style="left: 70%; animation-duration: 11s;">❄</div>
+  <div class="snowflake" style="left: 80%; animation-duration: 8s;">❄</div>
+  
+   <div class="snowflake" style="right: 10%; animation-duration: 12s;">❄</div>
+  <div class="snowflake" style="right: 20%; animation-duration: 8s;">❄</div>
+  <div class="snowflake" style="right: 30%; animation-duration: 10s;">❄</div>
+  <div class="snowflake" style="right: 40%; animation-duration: 7s;">❄</div>
+  <div class="snowflake" style="right: 50%; animation-duration: 9s;">❄</div>
+  <div class="snowflake" style="right: 60%; animation-duration: 6s;">❄</div>
+  <div class="snowflake" style="right: 70%; animation-duration: 11s;">❄</div>
+  <div class="snowflake" style="right: 80%; animation-duration: 8s;">❄</div>
+  
+  
+  <div class="snowflake" style="center: 10%; animation-duration: 12s;">❄</div>
+  <div class="snowflake" style="center: 20%; animation-duration: 8s;">❄</div>
+  <div class="snowflake" style="center: 30%; animation-duration: 10s;">❄</div>
+  <div class="snowflake" style="center: 40%; animation-duration: 7s;">❄</div>
+  <div class="snowflake" style="center: 50%; animation-duration: 9s;">❄</div>
+  <div class="snowflake" style="center: 60%; animation-duration: 6s;">❄</div>
+  <div class="snowflake" style="center: 70%; animation-duration: 11s;">❄</div>
+  <div class="snowflake" style="center: 80%; animation-duration: 8s;">❄</div>
+  
+  <div class="snowflake" style="center: 10%; animation-duration: 8s;">❄</div>
+  <div class="snowflake" style="center: 20%; animation-duration: 8s;">❄</div>
+  <div class="snowflake" style="center: 30%; animation-duration: 8s;">❄</div>
+  <div class="snowflake" style="center: 40%; animation-duration: 8s;">❄</div>
+  <div class="snowflake" style="center: 50%; animation-duration: 8s;">❄</div>
+  <div class="snowflake" style="center: 60%; animation-duration: 8s;">❄</div>
+  <div class="snowflake" style="center: 70%; animation-duration: 8s;">❄</div>
+  <div class="snowflake" style="center: 80%; animation-duration: 8s;">❄</div>
+  
+  
+    
+  <div class="snowflake" style="center: 10%; animation-duration: 5s;">❄</div>
+  <div class="snowflake" style="center: 20%; animation-duration: 5s;">❄</div>
+  <div class="snowflake" style="center: 30%; animation-duration: 5s;">❄</div>
+  <div class="snowflake" style="center: 40%; animation-duration: 5s;">❄</div>
+  <div class="snowflake" style="center: 50%; animation-duration: 5s;">❄</div>
+  <div class="snowflake" style="center: 60%; animation-duration: 5s;">❄</div>
+  <div class="snowflake" style="center: 70%; animation-duration: 5s;">❄</div>
+  <div class="snowflake" style="center: 80%; animation-duration: 5s;">❄</div>
+</div>
+<!-- Gift box with Arabic text "ماتكبسها"
+<div class="gift-box-1" id="giftBox">
+  <div class="text">ما تكبسها</div>  
+</div>
+-->
+
+
+<!-- Santa Claus animated slap -->
+<div class="santa-appear" id="santa"></div>
+
+<div class="container">
+  <h1>Secret Santa Assignment</h1>
+ <p id="personId"></p> <p>Click the button below to reveal who you are buying a gift for!</p>
+  <button onclick="revealSanta()">Reveal</button>
+  
+  <p id="assignedPerson"></p> <!-- Revealed name will be inserted here -->
+
+  <div class="info">
+    <p>🎄 You're warmly invited to the Christmas Dinner at <strong>Nicolas Khoury Residence</strong> on <strong>December 25th</strong>!</p>
+    <p>🎁 Opening gifts at <strong>Eid Residence</strong>! Come join us for a magical evening!</p>
+  </div>
+
+
+  
+  <div class="gift-box">
+    <i class="fa fa-gift"></i> <span>Gifts will be waiting for you under the tree!</span>
+  </div>
+</div>
+
+<audio id="hoHoHoSound" src="hohoho.mp3" preload="auto"></audio>
+
+<script>
+  // Secret Santa assignments - Load from localStorage (set by draw.html) or use manual assignments
+  let secretSantaAssignments = {};
+  
+  // Try to load from localStorage first (automatically set by draw.html)
+  try {
+    const savedAssignments = localStorage.getItem('secretSantaAssignments');
+    if (savedAssignments) {
+      secretSantaAssignments = JSON.parse(savedAssignments);
+      console.log('Loaded assignments from localStorage:', secretSantaAssignments);
+    }
+  } catch (e) {
+    console.error('Failed to load from localStorage:', e);
+  }
+  
+  // If localStorage is empty, you can manually add assignments here:
+  // const secretSantaAssignments = {
+  //   "Nicola": "Daad",
+  //   "Daad": "Zeina",
+  //   ...
+  // };
+
+  // Decode the Base64 name from URL - improved to work with file:// protocol
+  function decodeNameFromURL() {
+    try {
+      let encodedName = null;
+      
+      // Try URLSearchParams first (works with http/https and modern browsers with file://)
+      if (window.location.search) {
+        const urlParams = new URLSearchParams(window.location.search);
+        encodedName = urlParams.get('name');
+      }
+      
+      // Fallback: manually parse query string (for older browsers or file:// issues)
+      if (!encodedName) {
+        const queryString = window.location.search || (window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '');
+        if (queryString) {
+          const params = queryString.substring(queryString.startsWith('?') ? 1 : 0).split('&');
+          for (let param of params) {
+            const [key, value] = param.split('=');
+            if (key === 'name' && value) {
+              encodedName = decodeURIComponent(value); // Decode URL encoding first
+              break;
+            }
+          }
+        }
+      }
+      
+      if (encodedName) {
+        try {
+          // The encoded name is URL-encoded, so decode it first
+          let base64String = decodeURIComponent(encodedName);
+          
+          // Decode Base64 - matching the encoding method from draw.html
+          // draw.html uses: btoa(unescape(encodeURIComponent(name)))
+          // So we reverse: decodeURIComponent(unescape(atob(base64String)))
+          let decodedName;
+          try {
+            decodedName = decodeURIComponent(unescape(atob(base64String)));
+          } catch (e) {
+            // Fallback: try simple atob if the above fails
+            decodedName = atob(base64String);
+          }
+          console.log("Decoded Name:", decodedName); // Debugging output
+          return decodedName;
+        } catch (e) {
+          console.error("Error decoding Base64:", e, "Encoded value:", encodedName);
+        }
+      }
+    } catch (e) {
+      console.error("Error parsing URL:", e);
+    }
+    return null;
+  }
+
+  // Function to reveal the assigned person based on URL query parameter
+  function revealSanta() {
+    const participant = decodeNameFromURL();
+    console.log("Participant decoded:", participant); // Debug
+    console.log("Assignments object:", secretSantaAssignments); // Debug
+    
+    // Check if assignments object is empty or not set up
+    const assignmentKeys = Object.keys(secretSantaAssignments);
+    console.log("Available keys:", assignmentKeys); // Debug
+    
+    if (assignmentKeys.length === 0) {
+      alert("⚠️ Secret Santa assignments have not been set up yet. Please contact the organizer to generate the assignments first.");
+      return;
+    }
+    
+    if (participant) {
+      // Try exact match first
+      if (secretSantaAssignments[participant]) {
+        const assignedPerson = secretSantaAssignments[participant];
+        document.getElementById("assignedPerson").textContent = `${assignedPerson}`;
+        const hoHoHoSound = document.getElementById("hoHoHoSound");
+        hoHoHoSound.play().catch(e => console.log("Audio play failed:", e));
+        return;
+      }
+      
+      // Try case-insensitive match
+      const participantLower = participant.toLowerCase().trim();
+      let foundKey = null;
+      for (let key in secretSantaAssignments) {
+        if (key.toLowerCase().trim() === participantLower) {
+          foundKey = key;
+          break;
+        }
+      }
+      
+      if (foundKey) {
+        const assignedPerson = secretSantaAssignments[foundKey];
+        document.getElementById("assignedPerson").textContent = `${assignedPerson}`;
+        const hoHoHoSound = document.getElementById("hoHoHoSound");
+        hoHoHoSound.play().catch(e => console.log("Audio play failed:", e));
+        return;
+      }
+      
+      // Not found
+      const availableNames = assignmentKeys.join(", ");
+      alert("Sorry, '" + participant + "' is not in the list.\n\nAvailable participants: " + availableNames + "\n\nPlease check the spelling or ask the organizer.");
+    } else {
+      alert("Sorry, your name is not in the URL. Please use the link provided by the organizer.");
+    }
+  }
+  
+  window.onload = function() {
+    const participant = decodeNameFromURL();
+    if (participant) {
+      document.getElementById("personId").textContent = `Hello, ${participant}!`;
+    }
+  };
+
+  // Gift box click handler (if gift box is enabled)
+  const giftBox = document.getElementById("giftBox");
+  if (giftBox) {
+    giftBox.addEventListener("click", function() {
+      const santa = document.getElementById("santa");
+      santa.style.display = "block";
+      
+      // Trigger animation
+      setTimeout(function() {
+        santa.style.display = "none";  // Hide Santa after animation
+      }, 2300); // Hide after the animation ends (2 seconds)
+    });
+  }
+</script>
+
+</body>
+</html>
+
