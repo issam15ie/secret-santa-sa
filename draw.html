@@ -259,42 +259,54 @@
         return;
       }
 
-      // Simple and reliable Secret Santa assignment algorithm
-      // Create a shuffled list of receivers
-      let receivers = [...participants];
-      
-      // Fisher-Yates shuffle
-      for (let i = receivers.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [receivers[i], receivers[j]] = [receivers[j], receivers[i]];
-      }
-
-      // Create assignments: each person gives to the next in shuffled list
-      // If someone would get themselves, swap with the next assignment
+      // Secret Santa assignment algorithm - ensures no duplicates and no self-assignments
       let assignments = {};
+      let attempts = 0;
+      const maxAttempts = 100;
       
-      for (let i = 0; i < participants.length; i++) {
-        const giver = participants[i];
-        let receiver = receivers[i];
+      // Keep trying until we get a valid assignment (no duplicates, no self-assignments)
+      while (attempts < maxAttempts) {
+        assignments = {};
+        let receivers = [...participants];
         
-        // If self-assignment, use next person (wrapping around)
-        if (receiver === giver) {
-          receiver = receivers[(i + 1) % receivers.length];
+        // Shuffle receivers using Fisher-Yates
+        for (let i = receivers.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [receivers[i], receivers[j]] = [receivers[j], receivers[i]];
         }
         
-        assignments[giver] = receiver;
+        // Create assignments: each person gives to the next in shuffled list
+        let valid = true;
+        for (let i = 0; i < participants.length; i++) {
+          const giver = participants[i];
+          const receiver = receivers[i];
+          
+          // Check for self-assignment
+          if (receiver === giver) {
+            valid = false;
+            break;
+          }
+          
+          assignments[giver] = receiver;
+        }
+        
+        // Check for duplicates
+        if (valid) {
+          const assignedReceivers = Object.values(assignments);
+          const uniqueReceivers = [...new Set(assignedReceivers)];
+          if (assignedReceivers.length === uniqueReceivers.length) {
+            break; // Valid assignment found
+          }
+        }
+        
+        attempts++;
       }
-
-      // Final check: fix any remaining self-assignments by swapping
-      for (let i = 0; i < participants.length; i++) {
-        const giver = participants[i];
-        if (assignments[giver] === giver) {
-          // Swap with next person's assignment
-          const nextIndex = (i + 1) % participants.length;
-          const nextGiver = participants[nextIndex];
-          const temp = assignments[nextGiver];
-          assignments[nextGiver] = assignments[giver];
-          assignments[giver] = temp;
+      
+      // If we couldn't find a valid assignment, use circular assignment (guaranteed to work)
+      if (attempts >= maxAttempts) {
+        assignments = {};
+        for (let i = 0; i < participants.length; i++) {
+          assignments[participants[i]] = participants[(i + 1) % participants.length];
         }
       }
 
