@@ -360,8 +360,17 @@
 
 <script>
   // Secret Santa assignments - Load from localStorage (set by draw.html) or use manual assignments
-  let secretSantaAssignments = {};
-  
+const secretSantaAssignments = {
+  "Nicola": "Samir",
+  "Daad": "Angie",
+  "Zeina": "Issam",
+  "Angie": "MJ",
+  "Samir": "Nicola",
+  "Liliane": "Zeina",
+  "Elias": "Daad",
+  "MJ": "Elias",
+  "Issam": "Liliane"
+};  
   // Try to load from localStorage first (automatically set by draw.html)
   try {
     const savedAssignments = localStorage.getItem('secretSantaAssignments');
